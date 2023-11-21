@@ -1,13 +1,15 @@
-// components/Start.js
+// components/Start.jsx
 
-import { StyleSheet, View, Text, TextInput, ImageBackground, TouchableOpacity } from 'react-native';
+import { StyleSheet, View, Text, TextInput, ImageBackground, TouchableOpacity, KeyboardAvoidingView } from 'react-native';
 import { useState } from 'react';
 
 const Start = ({ navigation }) => {
+	// states and constants
 	const [name, setName] = useState('');
 	const [background, setBackground] = useState('#FFFFFF');
 	const colors = ['#090C08', '#474056', '#8A95A5', '#B9C6AE'];
 
+	// to send the user to the chat screen
 	const signInUser = () => {
 		navigation.navigate('Chat', { name: name, color: background })
 	}
@@ -32,7 +34,7 @@ const Start = ({ navigation }) => {
 					/>
 					<View style={styles.select}>
 						<Text style={styles.selectText}>
-							Choose Background Color:
+							Choose Your Chat Color:
 						</Text>
 						<View style={styles.selectChoices}>
 							{colors.map((color) => {
@@ -57,6 +59,10 @@ const Start = ({ navigation }) => {
 					</TouchableOpacity>
 				</View>
 			</View>
+			{Platform.OS === 'ios'
+				? <KeyboardAvoidingView behavior='padding' />
+				: null
+			}
 		</ImageBackground>
 	);
 };
