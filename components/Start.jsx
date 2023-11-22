@@ -6,7 +6,6 @@ import { useState } from 'react';
 
 // import components for sign in
 import { getAuth, signInAnonymously } from 'firebase/auth';
-const auth = getAuth();
 
 const Start = ({ navigation }) => {
 	// states and constants
@@ -16,12 +15,14 @@ const Start = ({ navigation }) => {
 	// color options
 	const colors = ['#090C08', '#474056', '#757083', '#8A95A5', '#B9C6AE'];
 
+	const auth = getAuth();
+
 	// function to allow the user to sign in anonymously
 	const signInUser = () => {
 		signInAnonymously(auth)
 			.then(result => {
 				navigation.navigate('Chat', {
-					userId: result.user.uid,
+					userID: result.user.uid,
 					name: name,
 					color: chosenColor
 				});

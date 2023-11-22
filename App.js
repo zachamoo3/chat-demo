@@ -13,7 +13,8 @@ const Stack = createNativeStackNavigator();
 import { LogBox } from 'react-native';
 LogBox.ignoreLogs([
 	'AsyncStorage has been extracted from',
-	'Each child in a list should have a unique "key" prop.'
+	'Each child in a list should have a unique "key" prop.',
+	'@firebase/auth: Auth (10.3.1):'
 ]);
 
 // import components for Firestore

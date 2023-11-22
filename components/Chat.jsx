@@ -31,27 +31,28 @@ const Chat = ({ route, navigation, db }) => {
 		);
 	};
 
-	// effects established once, upon rendering Chat.jsx
+	// effects established once, when the Chat is initialized
 	useEffect(() => {
+		// places the name in the header
 		navigation.setOptions({ title: name });
-		// setMessages([
-		// 	{
-		// 		_id: 1,
-		// 		text: 'Hello there.',
-		// 		createdAt: new Date(),
-		// 		user: {
-		// 			_id: 2,
-		// 			name: 'React Native',
-		// 			avatar: 'https://placeimg.com/140/140/any',
-		// 		},
-		// 	},
-		// 	{
-		// 		_id: 2,
-		// 		text: 'Welcome to the chat!',
-		// 		createdAt: new Date(),
-		// 		system: true,
-		// 	},
-		// ]);
+
+		// to fetch messages from the database in real time
+		const q = query(collection(db, 'messages'), orderBy('createdAt', 'desc'));
+		const unsubMessages = onSnapshot(q, (docs) => {
+			let newMessages = [];
+			docs.forEach(doc => {
+				newMessages.push({
+					id: doc.id,
+					...doc.data(),
+					createdAt: new Date(doc.data().createdAt.toMillis())
+				});
+			});
+			setMessages(newMessages);
+		});
+		// clean up code
+		return () => {
+			if (unsubMessages) unsubMessages();
+		};
 	}, []);
 
 	return (
@@ -60,7 +61,7 @@ const Chat = ({ route, navigation, db }) => {
 				messages={messages}
 				renderBubble={renderBubble}
 				onSend={messages => onSend(messages)}
-				user={{ _id: 1 }}
+				user={{ _id: userID, name: name }}
 			/>
 			{Platform.OS === 'android'
 				? <KeyboardAvoidingView behavior='height' />
