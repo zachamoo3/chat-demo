@@ -1,19 +1,21 @@
 // components/Chat.jsx
 
+// import components
+import { addDoc, collection, onSnapshot, orderBy, query } from 'firebase/firestore';
 import { useEffect, useState } from 'react';
 import { StyleSheet, View, KeyboardAvoidingView, Platform } from 'react-native';
 import { Bubble, GiftedChat } from 'react-native-gifted-chat';
 
-const Chat = ({ route, navigation }) => {
+const Chat = ({ route, navigation, db }) => {
+	// importing values from Start.jsx
+	const { userID, name, color } = route.params;
+
 	// state
 	const [messages, setMessages] = useState([]);
 
-	// importing values from Start.jsx
-	const { name, color } = route.params;
-
-	// function to add new messages to the log of messages
+	// function to save sent messages to the Firebase
 	const onSend = (newMessages) => {
-		setMessages(previousMessages => GiftedChat.append(previousMessages, newMessages));
+		addDoc(collection(db, 'messages'), newMessages[0]);
 	};
 
 	// function to change the color of the chat bubbles
@@ -22,12 +24,8 @@ const Chat = ({ route, navigation }) => {
 			<Bubble
 				{...props}
 				wrapperStyle={{
-					right: { // using the color selected in Start.jsx
-						backgroundColor: color,
-					},
-					left: {
-						backgroundColor: '#fff',
-					},
+					right: { backgroundColor: color },
+					left: { backgroundColor: '#fff' }
 				}}
 			/>
 		);
@@ -36,24 +34,24 @@ const Chat = ({ route, navigation }) => {
 	// effects established once, upon rendering Chat.jsx
 	useEffect(() => {
 		navigation.setOptions({ title: name });
-		setMessages([
-			{
-				_id: 1,
-				text: 'Hello there.',
-				createdAt: new Date(),
-				user: {
-					_id: 2,
-					name: 'React Native',
-					avatar: 'https://placeimg.com/140/140/any',
-				},
-			},
-			{
-				_id: 2,
-				text: 'Welcome to the chat!',
-				createdAt: new Date(),
-				system: true,
-			},
-		]);
+		// setMessages([
+		// 	{
+		// 		_id: 1,
+		// 		text: 'Hello there.',
+		// 		createdAt: new Date(),
+		// 		user: {
+		// 			_id: 2,
+		// 			name: 'React Native',
+		// 			avatar: 'https://placeimg.com/140/140/any',
+		// 		},
+		// 	},
+		// 	{
+		// 		_id: 2,
+		// 		text: 'Welcome to the chat!',
+		// 		createdAt: new Date(),
+		// 		system: true,
+		// 	},
+		// ]);
 	}, []);
 
 	return (
