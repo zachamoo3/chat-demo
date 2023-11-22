@@ -1,19 +1,20 @@
 // components/Chat.jsx
 
+import { addDoc, collection, onSnapshot, orderBy, query } from 'firebase/firestore';
 import { useEffect, useState } from 'react';
 import { StyleSheet, View, KeyboardAvoidingView, Platform } from 'react-native';
 import { Bubble, GiftedChat } from 'react-native-gifted-chat';
 
-const Chat = ({ route, navigation }) => {
+const Chat = ({ route, navigation, db }) => {
+	// importing values from Start.jsx
+	const { userID, name, color } = route.params;
+
 	// state
 	const [messages, setMessages] = useState([]);
 
-	// importing values from Start.jsx
-	const { name, color } = route.params;
-
-	// function to add new messages to the log of messages
+	// function to save sent messages to the Firestore database
 	const onSend = (newMessages) => {
-		setMessages(previousMessages => GiftedChat.append(previousMessages, newMessages));
+		addDoc(collection(db, 'messages'), newMessages[0]);
 	};
 
 	// function to change the color of the chat bubbles
@@ -22,38 +23,36 @@ const Chat = ({ route, navigation }) => {
 			<Bubble
 				{...props}
 				wrapperStyle={{
-					right: { // using the color selected in Start.jsx
-						backgroundColor: color,
-					},
-					left: {
-						backgroundColor: '#fff',
-					},
+					right: { backgroundColor: color },
+					left: { backgroundColor: '#fff' },
 				}}
 			/>
 		);
 	};
 
-	// effects established once, upon rendering Chat.jsx
+	// effects established once, when Chat is initialized
 	useEffect(() => {
+		// places the name in the header
 		navigation.setOptions({ title: name });
-		setMessages([
-			{
-				_id: 1,
-				text: 'Hello there.',
-				createdAt: new Date(),
-				user: {
-					_id: 2,
-					name: 'React Native',
-					avatar: 'https://placeimg.com/140/140/any',
-				},
-			},
-			{
-				_id: 2,
-				text: 'Welcome to the chat!',
-				createdAt: new Date(),
-				system: true,
-			},
-		]);
+
+		// to fetch messages from the database in real time
+		const q = query(collection(db, 'messages'), orderBy('createdAt', 'desc'));
+		const unsubMessages = onSnapshot(q, (docs) => {
+			let newMessages = [];
+			docs.forEach(doc => {
+				newMessages.push({
+					id: doc.id,
+					...doc.data(),
+					createdAt: new Date(doc.data().createdAt.toMillis())
+				});
+			});
+			setMessages(newMessages);
+		});
+
+		// clean up code
+		return () => {
+			if (unsubMessages) unsubMessages();
+		};
 	}, []);
 
 	return (
@@ -61,8 +60,8 @@ const Chat = ({ route, navigation }) => {
 			<GiftedChat
 				messages={messages}
 				renderBubble={renderBubble}
-				onSend={messages => onSend(messages)}
-				user={{ _id: 1 }}
+				onSend={message => onSend(message)}
+				user={{ _id: userID, name: name }}
 			/>
 			{Platform.OS === 'android'
 				? <KeyboardAvoidingView behavior='height' />
