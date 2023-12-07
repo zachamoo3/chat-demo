@@ -19,9 +19,28 @@ LogBox.ignoreLogs([
 
 // import components for Firestore
 import { initializeApp } from 'firebase/app';
-import { getFirestore } from 'firebase/firestore';
+import { getFirestore, disableNetwork, enableNetwork } from 'firebase/firestore';
+
+// import components for storage
+import { useNetInfo } from '@react-native-community/netinfo';
+
+// import other components
+import { useEffect } from 'react';
+import { Alert } from 'react-native';
 
 const App = () => {
+	// check if there is connection
+	const connectionStatus = useNetInfo();
+	useEffect(() => {
+		if (connectionStatus.isConnected === false) {
+			Alert.alert('Connection lost!');
+			disableNetwork(db);
+		} else if (connectionStatus.isConnected === true) {
+			enableNetwork(db);
+		}
+	}, [connectionStatus.isConnected]);
+
+	// initialize Firebase
 	const firebaseConfig = {
 		apiKey: "AIzaSyBSXXxcN6MZ9m5c7AQBrRuMRjZlaNa6_lY",
 		authDomain: "chat-demo-698a1.firebaseapp.com",
@@ -30,15 +49,21 @@ const App = () => {
 		messagingSenderId: "355869124825",
 		appId: "1:355869124825:web:f8f845bbb88ebbecbe76c8"
 	};
-	const app = initializeApp(firebaseConfig); // initialize Firebase
-	const db = getFirestore(app); // initialize Cloud Firestore and get a reference to the service
+	const app = initializeApp(firebaseConfig);
+	const db = getFirestore(app);
 
 	return (
 		<NavigationContainer>
 			<Stack.Navigator initialRouteName='Login'>
 				<Stack.Screen name='Login' component={Start} />
 				<Stack.Screen name='Chat'>
-					{props => <Chat db={db} {...props} />}
+					{props =>
+						<Chat
+							db={db}
+							isConnected={connectionStatus.isConnected}
+							{...props}
+						/>
+					}
 				</Stack.Screen>
 			</Stack.Navigator>
 		</NavigationContainer>

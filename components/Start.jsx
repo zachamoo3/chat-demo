@@ -57,9 +57,10 @@ const Start = ({ navigation }) => {
 							Choose Your Chat Color:
 						</Text>
 						<View style={styles.selectChoices}>
-							{colors.map((color) => {
+							{colors.map((color, index) => {
 								return (
 									<TouchableOpacity
+										key={index}
 										style={[
 											styles.selectColors,
 											{ backgroundColor: color },

@@ -4,14 +4,30 @@
 import { addDoc, collection, onSnapshot, orderBy, query } from 'firebase/firestore';
 import { useEffect, useState } from 'react';
 import { StyleSheet, View, KeyboardAvoidingView, Platform } from 'react-native';
-import { Bubble, GiftedChat } from 'react-native-gifted-chat';
+import { Bubble, GiftedChat, InputToolbar } from 'react-native-gifted-chat';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const Chat = ({ route, navigation, db }) => {
+const Chat = ({ route, navigation, db, isConnected }) => {
 	// importing values from Start.jsx
 	const { userID, name, color } = route.params;
 
 	// state
 	const [messages, setMessages] = useState([]);
+
+	// define how to load cached messages
+	const loadCachedMessages = async () => {
+		const cachedMessages = (await AsyncStorage.getItem('messages')) || [];
+		setMessages(JSON.parse(cachedMessages));
+	}
+
+	// define how to cache messages
+	const cacheMessages = async (messagesToCache) => {
+		try {
+			await AsyncStorage.setItem('messages', JSON.stringify(messagesToCache));
+		} catch (error) {
+			console.log(error.message);
+		}
+	};
 
 	// function to save sent messages to the Firebase
 	const onSend = (newMessages) => {
@@ -32,34 +48,69 @@ const Chat = ({ route, navigation, db }) => {
 	};
 
 	// effects established once, when the Chat is initialized
+	let unsubMessages;
 	useEffect(() => {
 		// places the name in the header
 		navigation.setOptions({ title: name });
 
-		// to fetch messages from the database in real time
-		const q = query(collection(db, 'messages'), orderBy('createdAt', 'desc'));
-		const unsubMessages = onSnapshot(q, (docs) => {
-			let newMessages = [];
-			docs.forEach(doc => {
-				newMessages.push({
-					id: doc.id,
-					...doc.data(),
-					createdAt: new Date(doc.data().createdAt.toMillis())
+		if (isConnected === true) { // if the user is connected
+			// to fetch messages from the database in real time
+			const q = query(collection(db, 'messages'), orderBy('createdAt', 'desc'));
+			unsubMessages = onSnapshot(q, (docs) => {
+				let newMessages = [];
+				docs.forEach(doc => {
+					newMessages.push({
+						id: doc.id,
+						...doc.data(),
+						createdAt: new Date(doc.data().createdAt.toMillis())
+					});
 				});
+				cacheMessages(newMessages);
+				setMessages(newMessages);
 			});
-			setMessages(newMessages);
-		});
+		} else { // else, if the user is disconnected
+			loadCachedMessages();
+		}
+
 		// clean up code
 		return () => {
 			if (unsubMessages) unsubMessages();
 		};
-	}, []);
+
+		// to fetch messages from the database in real time
+		// const q = query(collection(db, 'messages'), orderBy('createdAt', 'desc'));
+		// const unsubMessages = onSnapshot(q, (docs) => {
+		// 	let newMessages = [];
+		// 	docs.forEach(doc => {
+		// 		newMessages.push({
+		// 			id: doc.id,
+		// 			...doc.data(),
+		// 			createdAt: new Date(doc.data().createdAt.toMillis())
+		// 		});
+		// 	});
+		// 	setMessages(newMessages);
+		// });
+		// clean up code
+		// return () => {
+		// 	if (unsubMessages) unsubMessages();
+		// };
+	}, [isConnected]);
+
+	// disable the input toolbar if the user is not connected
+	const renderInputToolbar = (props) => {
+		if (isConnected) {
+			return <InputToolbar {...props} />
+		} else {
+			return null
+		};
+	};
 
 	return (
 		<View style={styles.container}>
 			<GiftedChat
 				messages={messages}
 				renderBubble={renderBubble}
+				renderInputToolbar={renderInputToolbar}
 				onSend={messages => onSend(messages)}
 				user={{ _id: userID, name: name }}
 			/>
