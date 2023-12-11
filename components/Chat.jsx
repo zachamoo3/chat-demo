@@ -6,8 +6,10 @@ import { useEffect, useState } from 'react';
 import { StyleSheet, View, KeyboardAvoidingView, Platform } from 'react-native';
 import { Bubble, GiftedChat, InputToolbar } from 'react-native-gifted-chat';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import CustomActions from './CustomActions';
+import MapView from 'react-native-maps';
 
-const Chat = ({ route, navigation, db, isConnected }) => {
+const Chat = ({ route, navigation, db, isConnected, storage }) => {
 	// importing values from Start.jsx
 	const { userID, name, color } = route.params;
 
@@ -76,24 +78,6 @@ const Chat = ({ route, navigation, db, isConnected }) => {
 		return () => {
 			if (unsubMessages) unsubMessages();
 		};
-
-		// to fetch messages from the database in real time
-		// const q = query(collection(db, 'messages'), orderBy('createdAt', 'desc'));
-		// const unsubMessages = onSnapshot(q, (docs) => {
-		// 	let newMessages = [];
-		// 	docs.forEach(doc => {
-		// 		newMessages.push({
-		// 			id: doc.id,
-		// 			...doc.data(),
-		// 			createdAt: new Date(doc.data().createdAt.toMillis())
-		// 		});
-		// 	});
-		// 	setMessages(newMessages);
-		// });
-		// clean up code
-		// return () => {
-		// 	if (unsubMessages) unsubMessages();
-		// };
 	}, [isConnected]);
 
 	// disable the input toolbar if the user is not connected
@@ -105,12 +89,40 @@ const Chat = ({ route, navigation, db, isConnected }) => {
 		};
 	};
 
+	const renderCustomActions = (props) => {
+		return <CustomActions storage={storage} userID={userID} {...props} />;
+	};
+
+	const renderCustomView = (props) => {
+		const { currentMessage } = props;
+		if (currentMessage.location) {
+			return (
+				<MapView
+					style={{
+						width: 150,
+						height: 100,
+						borderRadius: 13,
+						margin: 3
+					}}
+					region={{
+						latitude: currentMessage.location.latitude,
+						longitude: currentMessage.location.longitude,
+						latitudeDelta: 0.0922,
+						longitudeDelta: 0.0421,
+					}}
+				/>
+			);
+		};
+	};
+
 	return (
 		<View style={styles.container}>
 			<GiftedChat
 				messages={messages}
 				renderBubble={renderBubble}
 				renderInputToolbar={renderInputToolbar}
+				renderActions={renderCustomActions}
+				renderCustomView={renderCustomView}
 				onSend={messages => onSend(messages)}
 				user={{ _id: userID, name: name }}
 			/>
