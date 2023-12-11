@@ -1,4 +1,4 @@
-// components/Chat.jsx
+// root/components/Chat.jsx
 
 // import components
 import { addDoc, collection, onSnapshot, orderBy, query } from 'firebase/firestore';
@@ -89,10 +89,12 @@ const Chat = ({ route, navigation, db, isConnected, storage }) => {
 		};
 	};
 
+	// to add the "action bubble" to the left of the input toolbar
 	const renderCustomActions = (props) => {
 		return <CustomActions storage={storage} userID={userID} {...props} />;
 	};
 
+	// to change the view of a message bubble if the message is a location
 	const renderCustomView = (props) => {
 		const { currentMessage } = props;
 		if (currentMessage.location) {
@@ -135,7 +137,7 @@ const Chat = ({ route, navigation, db, isConnected, storage }) => {
 };
 
 const styles = StyleSheet.create({
-	container: { //topmost div container
+	container: { //topmost View container
 		flex: 1,
 	},
 });

@@ -1,4 +1,4 @@
-// App.js
+// root/App.js
 
 // import the screens we want to navigate
 import Start from './components/Start';

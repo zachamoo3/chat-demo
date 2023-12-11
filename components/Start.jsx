@@ -1,4 +1,4 @@
-// components/Start.jsx
+// root/components/Start.jsx
 
 // import components
 import { StyleSheet, View, Text, TextInput, ImageBackground, TouchableOpacity, KeyboardAvoidingView, Alert } from 'react-native';
